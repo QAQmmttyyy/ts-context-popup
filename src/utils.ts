@@ -1,4 +1,4 @@
-export type PopupPosition =
+export type PopupPlacement =
   | "left-top"
   | "left-center"
   | "left-bottom"
@@ -14,74 +14,132 @@ export type PopupPosition =
 
 export function getPopupPosition(
   context: HTMLElement,
-  popup: HTMLElement
-): Map<PopupPosition, { x: number; y: number }> {
+  popup: HTMLElement,
+  popupArrow: HTMLElement | null,
+  placement: PopupPlacement
+) {
   const {
     left,
     top,
     right,
     bottom,
-    width,
-    height
+    width: contextWidth,
+    height: contextHeight
   } = context.getBoundingClientRect();
 
+  console.log(context.getBoundingClientRect());
+  
   const {
     width: popupWidth,
     height: popupHeight
   } = popup.getBoundingClientRect();
 
-  const posEntries: [PopupPosition, { x: number; y: number }][] = [
-    ["left-top", { x: left - popupWidth, y: top }],
+  console.log(popup.getBoundingClientRect());
+
+  let popupOffsetX = 0;
+  let popupOffsetY = 0;
+  let arrowPosLeft:number;
+  let arrowPosRight:number;
+  let arrowPosTop:number;
+  let arrowPosBottom:number;
+
+  if (popupArrow) {
+    const {width: popupArrowWidth, height: popupArrowHeight} = popupArrow.getBoundingClientRect();
+    const popupBorderRadiusSize = parseInt(window.getComputedStyle(popup).borderRadius || '0');
+    const widthDelta = (contextWidth - popupArrowWidth) / 2;
+    const heightDelta = (contextHeight - popupArrowHeight) / 2;
+
+    if (widthDelta < popupBorderRadiusSize) {
+      popupOffsetX = popupBorderRadiusSize - widthDelta;
+      arrowPosLeft = arrowPosRight = popupBorderRadiusSize;
+    } else {
+      arrowPosLeft = arrowPosRight = widthDelta;
+    }
+
+    if (heightDelta < popupBorderRadiusSize) {
+      popupOffsetY = popupBorderRadiusSize - heightDelta;
+      arrowPosTop = arrowPosBottom = popupBorderRadiusSize
+    } else {
+      arrowPosTop = arrowPosBottom = heightDelta
+    }
+  }
+
+  // TODO: popupArrow pos
+  const popupArrowHorizontalPos = {
+
+  }
+
+
+  // left & right side
+  const xOfLeftSide = left - popupWidth;
+  const xOfRightSide = right;
+
+  const yOfAlignTop = top - popupOffsetY;
+  const yOfVerticalAlignCenter = top + Math.abs(contextHeight / 2) - popupHeight / 2;
+  const yOfAlignBottom = bottom - popupHeight + popupOffsetY;
+
+  // above & below side
+  const yOfAboveSide = top - popupHeight;
+  const yOfBelowSide = bottom;
+
+  const xOfAlignLeft = left - popupOffsetX;
+  const xOfHorizontalAlignCenter = left + Math.abs(contextWidth / 2) - popupWidth / 2;
+  const xOfAlignRight = right - popupWidth + popupOffsetX;
+
+  const posEntries: [PopupPlacement, { x: number; y: number }][] = [
+    ["left-top", { x: xOfLeftSide, y: yOfAlignTop }],
     [
       "left-center",
       {
-        x: left - popupWidth,
-        y: top + Math.abs(height / 2) - popupHeight / 2
+        x: xOfLeftSide,
+        y: yOfVerticalAlignCenter
       }
     ],
     [
       "left-bottom",
       {
-        x: left - popupWidth,
-        y: bottom - popupHeight
+        x: xOfLeftSide,
+        y: yOfAlignBottom
       }
     ],
-    ["right-top", { x: right, y: top }],
+    ["right-top", { x: xOfRightSide, y: yOfAlignTop }],
     [
       "right-center",
       {
-        x: right,
-        y: top + Math.abs(height / 2) - popupHeight / 2
+        x: xOfRightSide,
+        y: yOfVerticalAlignCenter
       }
     ],
-    ["right-bottom", { x: right, y: bottom - popupHeight }],
-    ["above-left", { x: left, y: top - popupHeight }],
+    ["right-bottom", { x: xOfRightSide, y: yOfAlignBottom }],
+    ["above-left", { x: xOfAlignLeft, y: yOfAboveSide }],
     [
       "above-center",
       {
-        x: left + Math.abs(width / 2) - popupWidth / 2,
-        y: top - popupHeight
+        x: xOfHorizontalAlignCenter,
+        y: yOfAboveSide
       }
     ],
     [
       "above-right",
       {
-        x: right - popupWidth,
-        y: top - popupHeight
+        x: xOfAlignRight,
+        y: yOfAboveSide
       }
     ],
-    ["below-left", { x: left, y: bottom }],
+    ["below-left", { x: xOfAlignLeft, y: yOfBelowSide }],
     [
       "below-center",
       {
-        x: left + Math.abs(width / 2) - popupWidth / 2,
-        y: bottom
+        x: xOfHorizontalAlignCenter,
+        y: yOfBelowSide
       }
     ],
-    ["below-right", { x: right - popupWidth, y: bottom }]
+    ["below-right", { x: xOfAlignRight, y: yOfBelowSide }]
   ];
 
-  return new Map(posEntries);
+  console.log(posEntries);
+  
+  return new Map(posEntries).get(placement);
 }
 
 export type HideOption = 'clickOutside' | 'clickOutsideAndContext';

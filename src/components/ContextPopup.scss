@@ -1,0 +1,132 @@
+// | "below-left"
+// | "below-center"
+// | "below-right"
+
+$POPUP_PADDING_SIZE: 10px;
+$POPUP_ARROW_UPPER_SIZE: 7px;
+$POPUP_ARROW_UNDER_SIZE: 8px;
+
+$POPUP_ARROW_UPPER_COLOR: #ffffff;
+$POPUP_ARROW_UNDER_COLOR: #c0c0c0;
+
+
+%arrow-basic {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: transparent;
+}
+
+%below {
+  .popup-arrow {
+    bottom: 100%;
+
+    &.upper-part {
+      border-bottom-color: $POPUP_ARROW_UPPER_COLOR;
+      transform-origin: center bottom;
+      transform: scale(0.94);
+    }
+
+    &.under-part {
+      border-bottom-color: $POPUP_ARROW_UNDER_COLOR;
+    }
+  }
+}
+
+%above {
+  .popup-arrow {
+    top: 100%;
+
+    &.upper-part {
+      border-top-color: $POPUP_ARROW_UPPER_COLOR;
+      transform-origin: center top;
+      transform: scale(0.94);
+    }
+
+    &.under-part {
+      border-top-color: $POPUP_ARROW_UNDER_COLOR;
+    }
+  }
+}
+
+%horizontal-left {
+  .popup-arrow {
+    &.upper-part {
+      left: $POPUP_PADDING_SIZE + 1;
+    }
+
+    &.under-part {
+      left: $POPUP_PADDING_SIZE;
+    }
+  }
+}
+%horizontal-center {
+  .popup-arrow {
+    bottom: 100%;
+    right: 50%;
+    transform: translateX(50%);
+  }
+}
+%horizontal-right {
+  .popup-arrow {
+    &.upper-part {
+      right: $POPUP_PADDING_SIZE + 1;
+    }
+
+    &.under-part {
+      right: $POPUP_PADDING_SIZE;
+    }
+  }
+}
+
+// -----------------------------------------------------
+.popup-child {
+  position: relative;
+  // box-sizing: border-box;
+  width: 100px;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 15px rgba(27,31,35,.15);
+  background-color: $POPUP_ARROW_UPPER_COLOR;
+
+  .popup-arrow {
+    @extend %arrow-basic;
+
+    &.upper-part {
+      border-width: $POPUP_ARROW_UPPER_SIZE;
+    }
+
+    &.under-part {
+      border-width: $POPUP_ARROW_UNDER_SIZE;
+    }
+  }
+  
+  &.below {
+    @extend %below;
+
+    &.left {
+      @extend %horizontal-left;
+    }
+    &.center {
+      @extend %horizontal-center;
+    }
+    &.right {
+      @extend %horizontal-right;
+    }
+  }
+
+  &.above {
+    @extend %above;
+
+    &.left {
+      @extend %horizontal-left;
+    }
+    &.center {
+      @extend %horizontal-center;
+    }
+    &.right {
+      @extend %horizontal-right;
+    }
+  }
+}

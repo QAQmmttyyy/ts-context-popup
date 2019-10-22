@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, CSSProperties, createRef } from 'react';
 import ReactDOM from 'react-dom';
+import classNames from 'classnames';
 
-import { PopupPosition, getPopupPosition, PopupInfo, dealPopupOnClick } from '../utils';
+import { PopupPlacement, getPopupPosition, PopupInfo, dealPopupOnClick } from '../utils';
 
-import './ContextPopup.css';
+import './ContextPopup.scss';
 
 interface ContextPopupProps {
   // className?: string;
   contextId: string;
-  position: PopupPosition;
+  placement: PopupPlacement;
+  withBorder?: boolean; 
   hide(): void;
 }
 
@@ -18,18 +20,31 @@ const onDocClick = (event: MouseEvent) => {
   dealPopupOnClick(event, currentPopupInfoStack);
 }
 
-const ContextPopup: React.FC<ContextPopupProps> = ({children, contextId, position, hide}) => {
+const popupStyleMap = new Map<string, CSSProperties>([
+  ['left', {padding: '0 10px 0 0'}],
+  ['right', {padding: '0 0 0 10px'}],
+  ['above', {padding: '0 0 10px 0'}],
+  ['below', {padding: '10px 0 0 0'}],
+] as [string, CSSProperties][])
+
+const ContextPopup: React.FC<ContextPopupProps> = (
+  {children, contextId, placement, withBorder = true, hide}
+) => {
   const popup = document.createElement('div');
   popup.style.position = 'absolute';
+  popup.style.padding = popupStyleMap.get(placement.split('-')[0])!.padding as string;
 
+  const popupArrowUnderPartRef = createRef<HTMLSpanElement>()
+  const popupArrowUpperPartRef = createRef<HTMLSpanElement>()
   // content
   // arrow
   const popupChild = (
-    <div style={{}}>
-      <span className="popup-arrow"></span>
-      <div className="popup-content">
+    <div className={classNames('popup-child', placement.split('-'))} style={{border: '1px solid #c4c4c4'}}>
+      <span ref={popupArrowUnderPartRef} className="popup-arrow under-part" />
+      <span ref={popupArrowUpperPartRef} className="popup-arrow upper-part" />
+      <section className="popup-content">
         {children}
-      </div>
+      </section>
     </div>
   )
   
@@ -41,7 +56,7 @@ const ContextPopup: React.FC<ContextPopupProps> = ({children, contextId, positio
     if (!popupContainer) {
       throw new Error('There is no popupContainer element');
     }
-    
+
     if (!context) {
       throw new Error('There is no related context element');
     }
@@ -54,7 +69,9 @@ const ContextPopup: React.FC<ContextPopupProps> = ({children, contextId, positio
 
     popupContainer.appendChild(popup);
 
-    const {x, y} = getPopupPosition(context, popup).get(position) || { x: 0,y: 0 };
+    const popupArrow = popupArrowUnderPartRef.current || popupArrowUpperPartRef.current;
+
+    const {x, y} = getPopupPosition(context, popup, popupArrow, placement) || { x: 0,y: 0 };
 
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
@@ -65,7 +82,7 @@ const ContextPopup: React.FC<ContextPopupProps> = ({children, contextId, positio
     }
   }, []);
 
-  return ReactDOM.createPortal(children, popup);
+  return ReactDOM.createPortal(popupChild, popup);
 }
 
 export default ContextPopup;

@@ -23,6 +23,18 @@
   color: #61dafb;
 }
 
+#menu {
+  border: 1px solid rgba(27,31,35,.2);
+  border-radius: 4px;
+  outline: none;
+  padding: 3px 10px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #24292e;
+  background-color: #eff3f6;
+  background-image: linear-gradient(-180deg,#fafbfc,#eff3f6 90%);
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

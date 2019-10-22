@@ -8,10 +8,10 @@ const App: React.FC = () => {
   const [show, setShow] = useState(false);
 
   return (
-    <div className="App">
+    <div className="App" style={{paddingTop: '300px'}}>
       <button id="menu" onClick={() => setShow(!show)}>more</button>
       {show && 
-        <ContextPopup contextId="menu" position="below-right" hide={() => setShow(false)}>
+        <ContextPopup contextId="menu" placement="above-right" hide={() => setShow(false)}>
           <ul>
             <li>1</li>
             <Submenu/>
@@ -32,7 +32,7 @@ const Submenu: React.FC = () => {
     <li id="submenu" onClick={() => setShowSub(true)}>submenu</li>
     {showSub && 
     
-      <ContextPopup contextId="submenu" position="right-top" hide={() => setShowSub(false)}>
+      <ContextPopup contextId="submenu" placement="right-top" hide={() => setShowSub(false)}>
         <ul>
           <li>1</li>
           <li>1</li>

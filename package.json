@@ -5,6 +5,7 @@
   "dependencies": {
     "@babel/core": "7.5.5",
     "@svgr/webpack": "4.3.2",
+    "@types/classnames": "^2.2.9",
     "@types/jest": "24.0.18",
     "@types/lodash": "^4.14.144",
     "@types/node": "12.7.5",
@@ -19,6 +20,7 @@
     "babel-preset-react-app": "^9.0.1",
     "camelcase": "^5.2.0",
     "case-sensitive-paths-webpack-plugin": "2.2.0",
+    "classnames": "^2.2.6",
     "css-loader": "2.1.1",
     "dotenv": "6.2.0",
     "dotenv-expand": "4.2.0",
