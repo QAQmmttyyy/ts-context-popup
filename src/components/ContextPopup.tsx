@@ -107,14 +107,14 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     console.log('Mounted: ');
     console.table(currentPopupInfoStack);
     
-    const onDocClick = (event: MouseEvent) => {
+    const clickOutsideHandler  = (event: MouseEvent) => {
       dealPopupOnClick(event, currentPopupInfoStack);
     }
 
-    document.addEventListener('click', onDocClick, true);
+    document.addEventListener('mousedown', clickOutsideHandler , true);
 
     return () => {
-      document.removeEventListener('click', onDocClick, true);
+      document.removeEventListener('mousedown', clickOutsideHandler , true);
       popupContainer.removeChild(popup);
     }
   }, []);
