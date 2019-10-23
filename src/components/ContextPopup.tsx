@@ -1,8 +1,8 @@
-import React, { useEffect, CSSProperties, createRef } from 'react';
+import React, { useEffect, CSSProperties, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 
-import { PopupPlacement, getPopupRelatedPositionValues, PopupInfo, dealPopupOnClick, getPopupArrowStyle } from '../utils';
+import { PopupPlacement, getPopupRelatedPositionValues, PopupInfo, dealPopupOnClick, getPopupArrowStyle, PopupPlacementSide, PopupPlacemenAlign } from '../utils';
 
 import './ContextPopup.scss';
 
@@ -30,14 +30,17 @@ const popupStyleMap = new Map<string, CSSProperties>([
 const ContextPopup: React.FC<ContextPopupProps> = (
   {children, contextId, placement, withBorder = true, hide}
 ) => {
-  const [side, ] = placement.split('-');
+  const [popupPlacement, setPopupPlacement] = useState<PopupPlacement>(placement);
+  
+  const [side, align] = popupPlacement.split('-') as [PopupPlacementSide, PopupPlacemenAlign];
+
   const popup = document.createElement('div');
 
   popup.style.position = 'absolute';
   popup.style.padding = popupStyleMap.get(side)!.padding as string;
 
-  const popupArrowUnderPartRef = createRef<HTMLSpanElement>()
-  const popupArrowUpperPartRef = createRef<HTMLSpanElement>()
+  const popupArrowUnderPartRef = useRef<HTMLSpanElement>(null);
+  const popupArrowUpperPartRef = useRef<HTMLSpanElement>(null);
   // content
   // arrow
   const popupChild = (
@@ -87,13 +90,37 @@ const ContextPopup: React.FC<ContextPopupProps> = (
       y, 
       arrowHorizontalOffset, 
       arrowVerticalOffset
-    } = getPopupRelatedPositionValues(context, popup, popupArrow, placement);
+    } = getPopupRelatedPositionValues(context, popup, popupArrow, popupPlacement);
 
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
 
+    // Auto adjust placement
+    const {
+      left,
+      top,
+      right,
+      bottom,
+    } = popup.getBoundingClientRect();
+
+    let adjustedPlacement: PopupPlacement | undefined;
+
+    // TODO: complete condition
+    if (left < 0) {
+      adjustedPlacement = `right-${align}` as PopupPlacement;
+    } else if (top < 0) {
+      adjustedPlacement = `below-${align}` as PopupPlacement;
+    }
+
+    if (adjustedPlacement) {
+      setPopupPlacement(adjustedPlacement);
+    }
+
+    const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
     // arrow
-    const {upperPart, underPart} = getPopupArrowStyle(placement, withBorder, arrowHorizontalOffset, arrowVerticalOffset);
+    const {upperPart, underPart} = getPopupArrowStyle(popupPlacement, withBorder, arrowHorizontalOffset, arrowVerticalOffset);
 
     popupArrowUpperPartElem.style.cssText = upperPart;
 
@@ -104,8 +131,8 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     // other
     currentPopupInfoStack.push({context, popup, hide});
 
-    console.log('Mounted: ');
-    console.table(currentPopupInfoStack);
+    // console.log('Mounted: ');
+    // console.table(currentPopupInfoStack);
     
     const clickOutsideHandler  = (event: MouseEvent) => {
       dealPopupOnClick(event, currentPopupInfoStack);
@@ -117,7 +144,7 @@ const ContextPopup: React.FC<ContextPopupProps> = (
       document.removeEventListener('mousedown', clickOutsideHandler , true);
       popupContainer.removeChild(popup);
     }
-  }, []);
+  }, [popupPlacement]);
 
   return ReactDOM.createPortal(popupChild, popup);
 }

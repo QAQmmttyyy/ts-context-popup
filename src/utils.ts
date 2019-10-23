@@ -12,6 +12,19 @@ export type PopupPlacement =
   | "below-center"
   | "below-right";
 
+export type PopupPlacementSide = 
+  | 'left'
+  | 'right'
+  | 'above'
+  | 'below';
+
+export type PopupPlacemenAlign = 
+  | 'top'
+  | 'center'
+  | 'bottom'
+  | 'left'
+  | 'right';
+
 export function getPopupRelatedPositionValues(
   context: HTMLElement,
   popup: HTMLElement,
@@ -294,6 +307,6 @@ export function dealPopupOnClick(
     hide();
   }
 
-  console.log('Doc: ');
-  console.table(currentPopupInfoStack)
+  // console.log('Doc: ');
+  // console.table(currentPopupInfoStack)
 }
