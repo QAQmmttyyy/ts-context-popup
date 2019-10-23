@@ -9,9 +9,9 @@ const App: React.FC = () => {
 
   return (
     <div className="App" style={{paddingTop: '300px'}}>
-      <button id="menu" onClick={() => setShow(!show)}>more</button>
+      <button id="menu" onClick={() => setShow(!show)}>a</button>
       {show && 
-        <ContextPopup contextId="menu" placement="above-right" hide={() => setShow(false)}>
+        <ContextPopup contextId="menu" placement="left-top" withBorder={true} hide={() => setShow(false)}>
           <ul>
             <li>1</li>
             <Submenu/>
