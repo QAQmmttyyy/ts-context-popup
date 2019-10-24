@@ -17,7 +17,7 @@ $POPUP_ARROW_UNDER_COLOR: #c0c0c0;
     background-color: $POPUP_ARROW_UPPER_COLOR;
   }
 
-  &-withBorder {
+  &-showBorder {
     border: 1px solid #c4c4c4;
   }
 
@@ -37,7 +37,7 @@ $POPUP_ARROW_UNDER_COLOR: #c0c0c0;
     }
   }
 
-  &-below > &-arrow {
+  &-bottom > &-arrow {
     bottom: 100%;
 
     &-upper-part {
@@ -49,7 +49,7 @@ $POPUP_ARROW_UNDER_COLOR: #c0c0c0;
     }
   }
 
-  &-above > &-arrow {
+  &-top > &-arrow {
     top: 100%;
 
     &-upper-part {

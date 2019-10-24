@@ -2,16 +2,20 @@ import React, { useEffect, CSSProperties, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 
-import { PopupPlacement, getPopupRelatedPositionValues, PopupInfo, dealPopupOnClick, getPopupArrowStyle, PopupPlacementSide, PopupPlacemenAlign } from '../utils';
+import { PopupPlacement, getPopupRelatedPositionValues, PopupInfo, dealPopupOnClick, getPopupArrowStyle, PopupPlacementSide, PopupPlacemenAlign, getAdjustedPlacement } from '../utils';
 
 import './ContextPopup.scss';
+import _ from 'lodash';
 
 interface ContextPopupProps {
-  className?: string;
-  style?: CSSProperties;
   contextId: string;
   placement: PopupPlacement;
-  withBorder?: boolean; 
+  className?: string;
+  style?: CSSProperties;
+  showBorder?: boolean;
+  // showArrow?: boolean;
+  borderColor?: string;
+  backgroundColor?: string;
   hide(): void;
 }
 
@@ -23,12 +27,12 @@ const currentPopupInfoStack: PopupInfo[] = [];
 const popupStyleMap = new Map<string, CSSProperties>([
   ['left', {padding: '0 10px 0 0'}],
   ['right', {padding: '0 0 0 10px'}],
-  ['above', {padding: '0 0 10px 0'}],
-  ['below', {padding: '10px 0 0 0'}],
+  ['top', {padding: '0 0 10px 0'}],
+  ['bottom', {padding: '10px 0 0 0'}],
 ] as [string, CSSProperties][])
 
 const ContextPopup: React.FC<ContextPopupProps> = (
-  {children, contextId, placement, withBorder = true, hide}
+  {children, style, contextId, placement, showBorder = true, borderColor, backgroundColor, hide}
 ) => {
   const [popupPlacement, setPopupPlacement] = useState<PopupPlacement>(placement);
   
@@ -36,20 +40,34 @@ const ContextPopup: React.FC<ContextPopupProps> = (
 
   const popup = document.createElement('div');
 
-  popup.style.position = 'absolute';
+  popup.className = `${PREFIX_CLS}`;
+  popup.style.position = 'fixed';
   popup.style.padding = popupStyleMap.get(side)!.padding as string;
 
   const popupArrowUnderPartRef = useRef<HTMLSpanElement>(null);
   const popupArrowUpperPartRef = useRef<HTMLSpanElement>(null);
   // content
   // arrow
-  const popupChild = (
-    <div className={classNames(
+  const popupBodyStyle = {
+    ...style,
+    borderColor,
+    backgroundColor,
+  }
+
+  // const arrowColorStyleProperty = new Map<string, string>([
+  //   ['left', 'borderColor'],
+  //   ['right', 'borderColor'],
+  //   ['top', 'borderColor'],
+  //   ['below', 'borderColor'],
+  // ] as [string, CSSProperties][])
+
+  const popupBody = (
+    <div style={popupBodyStyle} className={classNames(
       `${PREFIX_CLS}-body`, 
       `${PREFIX_CLS}-${side}`, 
-      {[`${PREFIX_CLS}-withBorder`]: withBorder}
+      {[`${PREFIX_CLS}-showBorder`]: showBorder}
     )}>
-      {withBorder && <span ref={popupArrowUnderPartRef} className={`${PREFIX_CLS}-arrow ${PREFIX_CLS}-arrow-under-part`} />}
+      {showBorder && <span ref={popupArrowUnderPartRef} className={`${PREFIX_CLS}-arrow ${PREFIX_CLS}-arrow-under-part`} />}
       <span ref={popupArrowUpperPartRef} className={`${PREFIX_CLS}-arrow ${PREFIX_CLS}-arrow-upper-part`} />
       <section className={`${PREFIX_CLS}-content`}>
         {children}
@@ -72,7 +90,7 @@ const ContextPopup: React.FC<ContextPopupProps> = (
       throw new Error('There is no related context element');
     }
 
-    if (withBorder && !popupArrowUnderPartElem) {
+    if (showBorder && !popupArrowUnderPartElem) {
       throw new Error('There is no popup arrow under part element');
     }
 
@@ -82,7 +100,7 @@ const ContextPopup: React.FC<ContextPopupProps> = (
 
     popupContainer.appendChild(popup);
 
-    const popupArrow = withBorder ? popupArrowUnderPartElem! : popupArrowUpperPartElem;
+    const popupArrow = showBorder ? popupArrowUnderPartElem! : popupArrowUpperPartElem;
 
     // popup
     const {
@@ -96,36 +114,21 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     popup.style.top = `${y}px`;
 
     // Auto adjust placement
-    const {
-      left,
-      top,
-      right,
-      bottom,
-    } = popup.getBoundingClientRect();
+    const adjustedPlacement = getAdjustedPlacement(context, popup, side, align);
 
-    let adjustedPlacement: PopupPlacement | undefined;
-
-    // TODO: complete condition
-    if (left < 0) {
-      adjustedPlacement = `right-${align}` as PopupPlacement;
-    } else if (top < 0) {
-      adjustedPlacement = `below-${align}` as PopupPlacement;
-    }
-
+    console.log(adjustedPlacement);
+    
     if (adjustedPlacement) {
       setPopupPlacement(adjustedPlacement);
     }
 
-    const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-
     // arrow
-    const {upperPart, underPart} = getPopupArrowStyle(popupPlacement, withBorder, arrowHorizontalOffset, arrowVerticalOffset);
+    const {upperPart, underPart} = getPopupArrowStyle(popupPlacement, showBorder, arrowHorizontalOffset, arrowVerticalOffset);
 
-    popupArrowUpperPartElem.style.cssText = upperPart;
+    popupArrowUpperPartElem.style.cssText = backgroundColor ? upperPart + `border-${side}-Color: ${backgroundColor};` : upperPart;
 
-    if (withBorder) {
-      popupArrowUnderPartElem!.style.cssText = underPart;
+    if (showBorder) {
+      popupArrowUnderPartElem!.style.cssText = borderColor ? underPart + `border-${side}-Color: ${borderColor};` : underPart;
     }
 
     // other
@@ -134,19 +137,21 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     // console.log('Mounted: ');
     // console.table(currentPopupInfoStack);
     
-    const clickOutsideHandler  = (event: MouseEvent) => {
+    const clickOutsideHandler  = (event: MouseEvent | TouchEvent) => {
       dealPopupOnClick(event, currentPopupInfoStack);
     }
 
     document.addEventListener('mousedown', clickOutsideHandler , true);
+    document.addEventListener('touchstart', clickOutsideHandler , true);
 
     return () => {
       document.removeEventListener('mousedown', clickOutsideHandler , true);
+      document.removeEventListener('touchstart', clickOutsideHandler , true);
       popupContainer.removeChild(popup);
     }
   }, [popupPlacement]);
 
-  return ReactDOM.createPortal(popupChild, popup);
+  return ReactDOM.createPortal(popupBody, popup);
 }
 
 export default ContextPopup;

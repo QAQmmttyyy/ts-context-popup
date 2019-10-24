@@ -8,13 +8,22 @@ const App: React.FC = () => {
   const [show, setShow] = useState(false);
 
   return (
-    <div className="App" style={{paddingTop: '300px'}}>
+    <div className="App" style={{paddingTop: '100px'}}>
       <button id="menu" onClick={() => setShow(!show)}>a</button>
       {show && 
-        <ContextPopup contextId="menu" placement="left-top" withBorder={true} hide={() => setShow(false)}>
+        <ContextPopup 
+          contextId="menu" 
+          placement="left-bottom" 
+          style={{color: 'white'}}
+          showBorder={false}
+          backgroundColor="#000"
+          hide={() => setShow(false)}>
           <ul>
             <li>1</li>
             <Submenu/>
+            <li>3</li>
+            <li>3</li>
+            <li>3</li>
             <li>3</li>
           </ul>
         </ContextPopup>
