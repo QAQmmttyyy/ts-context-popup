@@ -2,7 +2,7 @@ import React, { useEffect, CSSProperties, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 
-import { PopupPlacement, getPopupRelatedPositionValues, PopupInfo, dealPopupOnClick, getPopupArrowStyle, PopupPlacementSide, PopupPlacemenAlign, getAdjustedPlacement } from '../utils';
+import { PopupPlacement, getPopupRelatedPositionValues, PopupInfo, dealPopupOnClick, getPopupArrowStyle, PopupPlacementSide, PopupPlacemenAlign, getAdjustedPlacement, HideOption } from '../utils';
 
 import './ContextPopup.scss';
 import _ from 'lodash';
@@ -10,10 +10,10 @@ import _ from 'lodash';
 interface ContextPopupProps {
   contextId: string;
   placement: PopupPlacement;
+  hideOption: HideOption;
   className?: string;
   style?: CSSProperties;
   showBorder?: boolean;
-  // showArrow?: boolean;
   borderColor?: string;
   backgroundColor?: string;
   hide(): void;
@@ -21,21 +21,21 @@ interface ContextPopupProps {
 
 const PREFIX_CLS = 'axis-popover';
 
-const currentPopupInfoStack: PopupInfo[] = [];
+let currentPopupInfoStack: PopupInfo[] = [];
 
 // TODO: change to Getter func
 const popupStyleMap = new Map<string, CSSProperties>([
-  ['left', {padding: '0 10px 0 0'}],
-  ['right', {padding: '0 0 0 10px'}],
-  ['top', {padding: '0 0 10px 0'}],
-  ['bottom', {padding: '10px 0 0 0'}],
+  ['left', { padding: '0 10px 0 0' }],
+  ['right', { padding: '0 0 0 10px' }],
+  ['top', { padding: '0 0 10px 0' }],
+  ['bottom', { padding: '10px 0 0 0' }],
 ] as [string, CSSProperties][])
 
 const ContextPopup: React.FC<ContextPopupProps> = (
-  {children, style, contextId, placement, showBorder = true, borderColor, backgroundColor, hide}
+  { children, contextId, placement, hideOption, style, showBorder = true, borderColor, backgroundColor, hide }
 ) => {
   const [popupPlacement, setPopupPlacement] = useState<PopupPlacement>(placement);
-  
+
   const [side, align] = popupPlacement.split('-') as [PopupPlacementSide, PopupPlacemenAlign];
 
   const popup = document.createElement('div');
@@ -63,9 +63,9 @@ const ContextPopup: React.FC<ContextPopupProps> = (
 
   const popupBody = (
     <div style={popupBodyStyle} className={classNames(
-      `${PREFIX_CLS}-body`, 
-      `${PREFIX_CLS}-${side}`, 
-      {[`${PREFIX_CLS}-showBorder`]: showBorder}
+      `${PREFIX_CLS}-body`,
+      `${PREFIX_CLS}-${side}`,
+      { [`${PREFIX_CLS}-showBorder`]: showBorder }
     )}>
       {showBorder && <span ref={popupArrowUnderPartRef} className={`${PREFIX_CLS}-arrow ${PREFIX_CLS}-arrow-under-part`} />}
       <span ref={popupArrowUpperPartRef} className={`${PREFIX_CLS}-arrow ${PREFIX_CLS}-arrow-upper-part`} />
@@ -74,7 +74,7 @@ const ContextPopup: React.FC<ContextPopupProps> = (
       </section>
     </div>
   )
-  
+
   // Did mount
   useEffect(() => {
     const popupContainer = document.getElementById('popup-container');
@@ -104,9 +104,9 @@ const ContextPopup: React.FC<ContextPopupProps> = (
 
     // popup
     const {
-      x, 
-      y, 
-      arrowHorizontalOffset, 
+      x,
+      y,
+      arrowHorizontalOffset,
       arrowVerticalOffset
     } = getPopupRelatedPositionValues(context, popup, popupArrow, popupPlacement);
 
@@ -117,13 +117,13 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     const adjustedPlacement = getAdjustedPlacement(context, popup, side, align);
 
     console.log(adjustedPlacement);
-    
+
     if (adjustedPlacement) {
       setPopupPlacement(adjustedPlacement);
     }
 
     // arrow
-    const {upperPart, underPart} = getPopupArrowStyle(popupPlacement, showBorder, arrowHorizontalOffset, arrowVerticalOffset);
+    const { upperPart, underPart } = getPopupArrowStyle(popupPlacement, showBorder, arrowHorizontalOffset, arrowVerticalOffset);
 
     popupArrowUpperPartElem.style.cssText = backgroundColor ? upperPart + `border-${side}-Color: ${backgroundColor};` : upperPart;
 
@@ -132,21 +132,22 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     }
 
     // other
-    currentPopupInfoStack.push({context, popup, hide});
+    currentPopupInfoStack.push({ context, popup, hide });
+    currentPopupInfoStack = _.uniq(currentPopupInfoStack);
 
     // console.log('Mounted: ');
     // console.table(currentPopupInfoStack);
-    
-    const clickOutsideHandler  = (event: MouseEvent | TouchEvent) => {
-      dealPopupOnClick(event, currentPopupInfoStack);
+
+    const clickOutsideHandler = (event: MouseEvent | TouchEvent) => {
+      dealPopupOnClick(event, currentPopupInfoStack, hideOption);
     }
 
-    document.addEventListener('mousedown', clickOutsideHandler , true);
-    document.addEventListener('touchstart', clickOutsideHandler , true);
+    document.addEventListener('mousedown', clickOutsideHandler, true);
+    document.addEventListener('touchstart', clickOutsideHandler, true);
 
     return () => {
-      document.removeEventListener('mousedown', clickOutsideHandler , true);
-      document.removeEventListener('touchstart', clickOutsideHandler , true);
+      document.removeEventListener('mousedown', clickOutsideHandler, true);
+      document.removeEventListener('touchstart', clickOutsideHandler, true);
       popupContainer.removeChild(popup);
     }
   }, [popupPlacement]);

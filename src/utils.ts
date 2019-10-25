@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 export type PopupPlacement =
   | "left-top"
   | "left-center"
@@ -12,25 +14,35 @@ export type PopupPlacement =
   | "bottom-center"
   | "bottom-right";
 
-export type PopupPlacementSide = 
+export type PopupPlacementSide =
   | 'left'
   | 'right'
   | 'top'
   | 'bottom';
 
-export type PopupPlacemenAlign = 
+export type PopupPlacemenAlign =
   | 'top'
   | 'center'
   | 'bottom'
   | 'left'
   | 'right';
 
-export type HideOption = 'clickOutside' | 'clickOutsideAndContext';
+export type HideOption = 'clickOutsidePopup' | 'clickOutsidePopupAndContext';
 
 export interface PopupInfo {
   context: HTMLElement;
   popup: HTMLElement;
   hide(): void;
+}
+
+export interface PopupCoordinate {
+  x: number;
+  y: number;
+}
+
+export interface ArrowPartStyleObject {
+  upperPart: string;
+  underPart: string;
 }
 
 /**
@@ -56,7 +68,7 @@ export function getPopupRelatedPositionValues(
   } = context.getBoundingClientRect();
 
   // console.log(context.getBoundingClientRect());
-  
+
   const {
     width: popupWidth,
     height: popupHeight
@@ -65,7 +77,7 @@ export function getPopupRelatedPositionValues(
   // console.log(popup.getBoundingClientRect());
 
   const {
-    width: popupArrowWidth, 
+    width: popupArrowWidth,
     height: popupArrowHeight
   } = popupArrow.getBoundingClientRect();
 
@@ -97,7 +109,7 @@ export function getPopupRelatedPositionValues(
     arrowHorizontalOffset = popupBorderRadiusSize;
   }
 
-  if (contextHeight> popupHeight) {
+  if (contextHeight > popupHeight) {
     arrowVerticalOffset = popupBorderRadiusSize;
   }
 
@@ -117,7 +129,7 @@ export function getPopupRelatedPositionValues(
   const xOfHorizontalAlignCenter = left + Math.abs(contextWidth / 2) - popupWidth / 2;
   const xOfAlignRight = right - popupWidth + popupOffsetX;
 
-  const posEntries: [PopupPlacement, { x: number; y: number; }][] = [
+  const posEntries: [PopupPlacement, PopupCoordinate][] = [
     ["left-top", { x: xOfLeftSide, y: yOfAlignTop }],
     [
       "left-center",
@@ -175,7 +187,7 @@ export function getPopupRelatedPositionValues(
     arrowHorizontalOffset,
     arrowVerticalOffset,
   }
-  
+
   return posValueObject;
 }
 
@@ -214,10 +226,10 @@ export function getPopupArrowStyle(
     upperPartStyleTop = `top: ${arrowVerticalOffset}px;`;
     upperPartStyleBottom = `bottom: ${arrowVerticalOffset}px;`;
 
-    underPartStyleLeft = 
-    underPartStyleRight = 
-    underPartStyleTop =
-    underPartStyleBottom = ''
+    underPartStyleLeft =
+      underPartStyleRight =
+      underPartStyleTop =
+      underPartStyleBottom = ''
   }
 
   const upperPartStyleHorizontalCenter = `right: 50%; transform: translateX(50%) scale(0.94);`;
@@ -226,7 +238,7 @@ export function getPopupArrowStyle(
   const upperPartStyleVerticalCenter = `bottom: 50%; transform: translateY(50%) scale(0.94);`;
   const underPartStyleVerticalCenter = `bottom: 50%; transform: translateY(50%) scale(0.94);`;
 
-  const arrowPosStyleEntries: [PopupPlacement, {upperPart: string; underPart: string}][] = [
+  const arrowPosStyleEntries: [PopupPlacement, ArrowPartStyleObject][] = [
     ["left-top", {
       upperPart: upperPartStyleTop,
       underPart: underPartStyleTop
@@ -311,7 +323,7 @@ export function getAdjustedPlacement(
   const contextOffsetBottom = viewportHeight - contextBottom;
 
   if (
-    (contextLeft < 20 || viewportWidth - contextRight < 20) && 
+    (contextLeft < 20 || viewportWidth - contextRight < 20) &&
     (contextTop < 20 || viewportHeight - contextBottom < 20)
   ) {
     return;
@@ -345,7 +357,7 @@ export function getAdjustedPlacement(
         } else if (popupBottom > viewportHeight) {
           adjustedPlacement = 'right-bottom';
         } else {
-          adjustedPlacement = `right-${initialAlign}` as PopupPlacement; 
+          adjustedPlacement = `right-${initialAlign}` as PopupPlacement;
         }
       } else if (contextTop > popupHeight) {
         adjustedPlacement = 'top-center';
@@ -367,14 +379,14 @@ export function getAdjustedPlacement(
         } else if (popupRight > viewportWidth) {
           adjustedPlacement = 'bottom-right';
         } else {
-          adjustedPlacement = `bottom-${initialAlign}` as PopupPlacement; 
+          adjustedPlacement = `bottom-${initialAlign}` as PopupPlacement;
         }
       } else if (contextLeft > popupWidth) {
         adjustedPlacement = 'left-center';
       } else {
         adjustedPlacement = 'right-center';
       }
-      
+
       break;
     case 'right':
       if (contextOffsetRight > popupWidth) {
@@ -389,14 +401,14 @@ export function getAdjustedPlacement(
         } else if (popupBottom > viewportHeight) {
           adjustedPlacement = 'left-bottom';
         } else {
-          adjustedPlacement = `left-${initialAlign}` as PopupPlacement; 
+          adjustedPlacement = `left-${initialAlign}` as PopupPlacement;
         }
       } else if (contextTop > popupHeight) {
         adjustedPlacement = 'top-center';
       } else {
         adjustedPlacement = 'bottom-center';
       }
-      
+
       break;
     case 'bottom':
       if (contextOffsetBottom > popupHeight) {
@@ -418,9 +430,9 @@ export function getAdjustedPlacement(
       } else {
         adjustedPlacement = 'right-center';
       }
-      
+
       break;
-  
+
     default:
       break;
   }
@@ -436,33 +448,43 @@ export function getAdjustedPlacement(
 // TODO: handler getter
 
 export function dealPopupOnClick(
-  event: MouseEvent | TouchEvent, 
-  currentPopupInfoStack: PopupInfo[], 
-  // option: HideOption
+  event: MouseEvent | TouchEvent,
+  currentPopupInfoStack: PopupInfo[],
+  option: HideOption
 ): void {
   if (currentPopupInfoStack.length === 0) {
     return;
   }
 
   const target = event.target;
-  const [clickedPopup] = currentPopupInfoStack.filter(({popup}) => popup.contains(target as HTMLElement));
 
-  let deleteFromIndex: number;
+  if (option === 'clickOutsidePopupAndContext') {
+    
+    const [clickedContext] = currentPopupInfoStack.filter(({ context }) => context.contains(target as HTMLElement));
+  
+    if (clickedContext) {
+      event.stopImmediatePropagation();
+      return;
+    }
+  
+    // const popupInfoEntirelyClickOutsideList = currentPopupInfoStack.filter(
+    //   ({ context, popup }) => 
+    //     !context.contains(target as HTMLElement) && !popup.contains(target as HTMLElement)
+    // );
 
-  if (clickedPopup) {
-    deleteFromIndex = currentPopupInfoStack.indexOf(clickedPopup) + 1;
-    // const clickedPopupIndex = currentPopupInfoStack.indexOf(clickedPopup);
+    const popupInfosToHide = _
+      .chain(currentPopupInfoStack)
+      .takeRightWhile(({ popup }) => !popup.contains(target as HTMLElement))
+      .reverse()
+      .value();
+  
+    for (const { hide } of popupInfosToHide) {
+      hide();
+    }
 
-  } else {
-    deleteFromIndex = 0;
+    _.pullAll(currentPopupInfoStack, popupInfosToHide);
   }
-
-  const popupInfosToHide = currentPopupInfoStack.splice(deleteFromIndex, currentPopupInfoStack.length).reverse();
-
-  for (const {hide} of popupInfosToHide) {
-    hide();
-  }
-
-  // console.log('Doc: ');
-  // console.table(currentPopupInfoStack)
+  
+  console.log('Doc: ');
+  console.table(currentPopupInfoStack)
 }

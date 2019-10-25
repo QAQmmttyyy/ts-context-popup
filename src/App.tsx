@@ -8,19 +8,20 @@ const App: React.FC = () => {
   const [show, setShow] = useState(false);
 
   return (
-    <div className="App" style={{paddingTop: '100px'}}>
-      <button id="menu" onClick={() => setShow(!show)}>a</button>
-      {show && 
-        <ContextPopup 
-          contextId="menu" 
-          placement="left-bottom" 
-          style={{color: 'white'}}
+    <div className="App" style={{ paddingTop: '100px' }}>
+      <button id="menu" onClick={() => setShow(true)}>a</button>
+      {show &&
+        <ContextPopup
+          contextId="menu"
+          placement="left-bottom"
+          hideOption="clickOutsidePopupAndContext"
+          style={{ color: 'white' }}
           showBorder={false}
           backgroundColor="#000"
           hide={() => setShow(false)}>
           <ul>
             <li>1</li>
-            <Submenu/>
+            <Submenu />
             <li>3</li>
             <li>3</li>
             <li>3</li>
@@ -37,18 +38,22 @@ const Submenu: React.FC = () => {
 
   return (
     <>
-    
-    <li id="submenu" onClick={() => setShowSub(true)}>submenu</li>
-    {showSub && 
-    
-      <ContextPopup contextId="submenu" placement="right-top" hide={() => setShowSub(false)}>
-        <ul>
-          <li>1</li>
-          <li>1</li>
-          <li>1</li>
-        </ul>
-      </ContextPopup>
-    }
+
+      <li id="submenu" onClick={() => setShowSub(true)}>submenu</li>
+      {showSub &&
+        <ContextPopup
+          contextId="submenu"
+          placement="right-top"
+          hideOption="clickOutsidePopupAndContext"
+          hide={() => setShowSub(false)}
+        >
+          <ul>
+            <li>1</li>
+            <li>1</li>
+            <li>1</li>
+          </ul>
+        </ContextPopup>
+      }
     </>
   )
 }
