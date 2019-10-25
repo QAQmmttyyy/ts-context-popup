@@ -41,25 +41,20 @@ const ContextPopup: React.FC<ContextPopupProps> = (
   const popup = document.createElement('div');
 
   popup.className = `${PREFIX_CLS}`;
+
   popup.style.position = 'fixed';
   popup.style.padding = popupStyleMap.get(side)!.padding as string;
 
   const popupArrowUnderPartRef = useRef<HTMLSpanElement>(null);
   const popupArrowUpperPartRef = useRef<HTMLSpanElement>(null);
+
   // content
   // arrow
   const popupBodyStyle = {
     ...style,
     borderColor,
     backgroundColor,
-  }
-
-  // const arrowColorStyleProperty = new Map<string, string>([
-  //   ['left', 'borderColor'],
-  //   ['right', 'borderColor'],
-  //   ['top', 'borderColor'],
-  //   ['below', 'borderColor'],
-  // ] as [string, CSSProperties][])
+  };
 
   const popupBody = (
     <div style={popupBodyStyle} className={classNames(
@@ -133,21 +128,26 @@ const ContextPopup: React.FC<ContextPopupProps> = (
 
     // other
     currentPopupInfoStack.push({ context, popup, hide });
-    currentPopupInfoStack = _.uniq(currentPopupInfoStack);
-
-    // console.log('Mounted: ');
-    // console.table(currentPopupInfoStack);
 
     const clickOutsideHandler = (event: MouseEvent | TouchEvent) => {
       dealPopupOnClick(event, currentPopupInfoStack, hideOption);
     }
 
-    document.addEventListener('mousedown', clickOutsideHandler, true);
-    document.addEventListener('touchstart', clickOutsideHandler, true);
+    document.addEventListener('click', clickOutsideHandler, true);
+    // document.addEventListener('mousedown', clickOutsideHandler, true);
+    // document.addEventListener('touchstart', clickOutsideHandler, true);
 
+    // call this func when re-render
+    // the old comp will un-mount before update
     return () => {
-      document.removeEventListener('mousedown', clickOutsideHandler, true);
-      document.removeEventListener('touchstart', clickOutsideHandler, true);
+      console.log('un mount');
+
+      document.removeEventListener('click', clickOutsideHandler, true);
+      // document.removeEventListener('mousedown', clickOutsideHandler, true);
+      // document.removeEventListener('touchstart', clickOutsideHandler, true);
+
+      _.remove(currentPopupInfoStack, (popupInfo) => popup === popupInfo.popup);
+
       popupContainer.removeChild(popup);
     }
   }, [popupPlacement]);

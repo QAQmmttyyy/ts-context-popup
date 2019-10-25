@@ -456,35 +456,44 @@ export function dealPopupOnClick(
     return;
   }
 
-  const target = event.target;
+  const target = event.target as Node;
+
+  const [clickedContext] = currentPopupInfoStack.filter(({ context }) => context.contains(target as HTMLElement));
 
   if (option === 'clickOutsidePopupAndContext') {
-    
-    const [clickedContext] = currentPopupInfoStack.filter(({ context }) => context.contains(target as HTMLElement));
-  
+
     if (clickedContext) {
       event.stopImmediatePropagation();
+      // event.preventDefault();
       return;
     }
-  
-    // const popupInfoEntirelyClickOutsideList = currentPopupInfoStack.filter(
-    //   ({ context, popup }) => 
-    //     !context.contains(target as HTMLElement) && !popup.contains(target as HTMLElement)
-    // );
 
-    const popupInfosToHide = _
-      .chain(currentPopupInfoStack)
-      .takeRightWhile(({ popup }) => !popup.contains(target as HTMLElement))
-      .reverse()
-      .value();
-  
-    for (const { hide } of popupInfosToHide) {
-      hide();
+  } else if (option === 'clickOutsidePopup') {
+    if (clickedContext) {
+      event.stopImmediatePropagation();
     }
-
-    _.pullAll(currentPopupInfoStack, popupInfosToHide);
+    // event.preventDefault();
   }
-  
+
+  const popupInfosToHide = _(currentPopupInfoStack)
+    .takeRightWhile(({ popup }) => {
+      console.log(popup);
+
+      console.log(popup.contains(target));
+
+      return !popup.contains(target)
+    })
+    .reverse()
+    .value();
+
+  for (const { hide } of popupInfosToHide) {
+    hide();
+  }
+
+  _.pullAll(currentPopupInfoStack, popupInfosToHide);
+
   console.log('Doc: ');
   console.table(currentPopupInfoStack)
+
+  return;
 }

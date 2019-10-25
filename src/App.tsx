@@ -14,7 +14,7 @@ const App: React.FC = () => {
         <ContextPopup
           contextId="menu"
           placement="left-bottom"
-          hideOption="clickOutsidePopupAndContext"
+          hideOption="clickOutsidePopup"
           style={{ color: 'white' }}
           showBorder={false}
           backgroundColor="#000"
