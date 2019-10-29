@@ -33,6 +33,7 @@ export interface PopupInfo {
   context: HTMLElement;
   popup: HTMLElement;
   hide(): void;
+  hideOption: HideOption;
 }
 
 export interface PopupCoordinate {
@@ -450,7 +451,7 @@ export function getAdjustedPlacement(
 export function dealPopupOnClick(
   event: MouseEvent | TouchEvent,
   currentPopupInfoStack: PopupInfo[],
-  option: HideOption
+  // option: HideOption
 ): void {
   if (currentPopupInfoStack.length === 0) {
     return;
@@ -458,39 +459,45 @@ export function dealPopupOnClick(
 
   const target = event.target as Node;
 
-  const [clickedContext] = currentPopupInfoStack.filter(({ context }) => context.contains(target as HTMLElement));
+  const [clickedContext] = currentPopupInfoStack.filter(({ context }) => context.contains(target));
+  const [clickedPopup] = currentPopupInfoStack.filter(({ popup }) => popup.contains(target));
 
-  if (option === 'clickOutsidePopupAndContext') {
+  // TODO: refactor 
+  // const indexOfInfoClickOnContext = _.findIndex(currentPopupInfoStack, ({ context }) => context.contains(target))
+  // const indexOfInfoClickOnPopup = _.findIndex(currentPopupInfoStack, ({ popup }) => popup.contains(target))
 
-    if (clickedContext) {
-      event.stopImmediatePropagation();
-      // event.preventDefault();
-      return;
-    }
+  // let popupInfosToHandle: PopupInfo[];
 
-  } else if (option === 'clickOutsidePopup') {
-    if (clickedContext) {
-      event.stopImmediatePropagation();
-    }
-    // event.preventDefault();
+  if (!clickedContext && !clickedPopup) {
+    // popupInfosToHandle = currentPopupInfoStack;
+    event.stopImmediatePropagation();
+  } else if (clickedContext) {
+    // popupInfosToHandle = _.takeRight(currentPopupInfoStack, currentPopupInfoStack.length - indexOfInfoClickOnContext);
+    event.stopImmediatePropagation();
+  } else {
+    // popupInfosToHandle = _.takeRight(currentPopupInfoStack, currentPopupInfoStack.length - indexOfInfoClickOnContext - 1);
   }
 
-  const popupInfosToHide = _(currentPopupInfoStack)
-    .takeRightWhile(({ popup }) => {
-      console.log(popup);
+  const clonedData = _.cloneDeep(currentPopupInfoStack);
 
-      console.log(popup.contains(target));
+  for (const popupInfo of clonedData.reverse()) {
+    const { context, popup, hide, hideOption } = popupInfo;
+    const isContextClicked = context.contains(target);
+    const isPopupClicked = popup.contains(target);
 
-      return !popup.contains(target)
-    })
-    .reverse()
-    .value();
-
-  for (const { hide } of popupInfosToHide) {
-    hide();
+    if (isContextClicked) {
+      if (hideOption === 'clickOutsidePopup') {
+        hide();
+      }
+      break;
+    } else if (isPopupClicked) {
+      break;
+    } else {
+      hide();
+    }
   }
 
-  _.pullAll(currentPopupInfoStack, popupInfosToHide);
+  // _.pullAll(currentPopupInfoStack, popupInfosToHandle);
 
   console.log('Doc: ');
   console.table(currentPopupInfoStack)

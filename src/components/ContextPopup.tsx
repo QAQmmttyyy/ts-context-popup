@@ -127,10 +127,10 @@ const ContextPopup: React.FC<ContextPopupProps> = (
     }
 
     // other
-    currentPopupInfoStack.push({ context, popup, hide });
+    currentPopupInfoStack.push({ context, popup, hide, hideOption });
 
     const clickOutsideHandler = (event: MouseEvent | TouchEvent) => {
-      dealPopupOnClick(event, currentPopupInfoStack, hideOption);
+      dealPopupOnClick(event, currentPopupInfoStack);
     }
 
     document.addEventListener('click', clickOutsideHandler, true);
